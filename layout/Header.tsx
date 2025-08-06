@@ -1,10 +1,36 @@
+'use client';
+import { usePathname } from 'next/navigation';
 import React from 'react'
 import './styles/header.css';
 
 const Header = () => {
+  const pathname = usePathname();
+  const getPageTitle = () => {
+    switch (pathname) {
+      case '/dashboard':
+        return 'Dashboard';
+      case '/news':
+        return 'News';
+      case '/document':
+        return 'Document';
+      case '/user-role':
+        return 'User Role';
+      case '/user-group':
+        return 'User Group';
+      case '/user-permission':
+        return 'User Permission';
+      case '/master-data':
+        return 'Master Data';
+      case '/history-log':
+        return 'History Log';
+      default:
+        return 'Home';
+    }
+  };
+
   return (
     <div className='header-container'>
-      <div className='dashboard-title'>Dashboard</div>
+      <div className='home-title'>{getPageTitle()}</div>
       <div className='search'>
         <div className='search-input'>
           <input type="text" placeholder='Search...' />

@@ -18,7 +18,7 @@ const Sidebar = () => {
     <div className="sidebar">
       <div>
         <Link href="/home" className="custom-link">
-          ♦ Softthai
+          Softthai
         </Link>
       </div>
 

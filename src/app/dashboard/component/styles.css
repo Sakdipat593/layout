@@ -1,0 +1,101 @@
+.data-table , .data-table th, .data-table td {
+  border: 1px solid #ccc;
+  border-collapse: collapse;
+  padding: 8px 12px;
+}
+.data-table{
+    width: 100%;
+    margin-bottom: 20px;
+}
+.col-center {
+  text-align: center;
+}
+.data-table thead {
+  background-color: #f57676;
+  font-size: 20px;
+}
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 30px;
+}
+.action-buttons button {
+  padding: 6px 12px;
+  border: 1px solid #000000;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+.edit-button {
+  background-color: #0051ff;
+  color: white;
+}
+.delete-button {
+  background-color: #ff0000;
+  color: white;
+}
+
+
+/*form styles*/
+.form-group {
+  margin-bottom: 12px;
+  width: 100%;
+}
+.form-group label {
+  display: block;
+  font-weight: bold;
+}
+.form-group input,.form-group select {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 100%;
+}
+.data-form {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+.form-row {
+  display: flex;
+  gap: 50px;
+  width: 100%;
+}
+#nAmount,#isPrint,#dRelease {
+  width: 200px;
+}
+.form-radio-group {
+  align-items: center;
+  flex-direction: row;
+}
+#isPrint {
+  width: auto;
+}
+.form-radio {
+  display: flex;
+  align-items: center;
+  margin: 10px;
+  gap: 10px;
+}
+.button-group {
+  display: flex;
+  gap: 50px;
+}
+button[type="submit"], button[type="reset"] {
+  padding: 10px 20px;
+  border: solid 2px #000000;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 20px;
+  color: white;
+  font-weight: bold;
+  font-family: Arial;
+}
+button[type="submit"]{
+  background-color: #00ff08;
+}
+button[type="reset"]{
+  background-color: #ff0000;
+}

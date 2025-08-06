@@ -18,11 +18,9 @@
     background-color: rgb(255, 43, 43);
 }
 .content {
-    background-color: rgb(216, 216, 216);
+    background-color: rgba(255,255,255,255);
     padding: 20px;
     height: calc(100% - 50px);
-    border-top: solid 1px #000000;
-    border-left: solid 1px #000000;
 }
 .search {
     display: flex;
