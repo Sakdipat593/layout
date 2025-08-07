@@ -1,25 +1,51 @@
-.data-table , .data-table th, .data-table td {
+.table {
+  font-size: 24px;
+}
+
+.data-table,
+.data-table th,
+.data-table td {
   border: 1px solid #ccc;
   border-collapse: collapse;
   padding: 8px 12px;
 }
-.data-table{
-    width: 100%;
-    margin-bottom: 20px;
+
+.data-table {
+  width: 100%;
+  margin-top: 10px;
+  margin-bottom: 20px;
 }
+
 .col-center {
   text-align: center;
 }
+
+.status-printed {
+  background-color: #c8f7c5;
+  color: #056805;
+  font-weight: bold;
+  border-radius: 4px;
+}
+
+.status-unprinted {
+  background-color: #ffd6d6;
+  color: #a60000;
+  font-weight: bold;
+  border-radius: 4px;
+}
+
 .data-table thead {
   background-color: #f57676;
   font-size: 20px;
 }
+
 .action-buttons {
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 30px;
 }
+
 .action-buttons button {
   padding: 6px 12px;
   border: 1px solid #000000;
@@ -27,63 +53,222 @@
   cursor: pointer;
   font-weight: bold;
 }
+
 .edit-button {
   background-color: #0051ff;
   color: white;
 }
+
 .delete-button {
   background-color: #ff0000;
   color: white;
 }
 
+/*Edit*/
+.modal {
+  position: fixed;
+  z-index: 9999;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background: rgb(255, 255, 255);
+  padding: 10px;
+  border: 2px solid;
+  border-radius: 10px;
+  width: 500px;
+  height: 250px;
+  max-width: 90%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+h2 {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.edit-form-text {
+  font-size: 18px;
+}
+
+.edit-form-row {
+  display: flex;
+  gap: 10px;
+}
+
+.edit-form-radio {
+  margin-top: 10px;
+}
+
+.edit-radio-group {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  gap: 10px;
+}
+
+.edit-form-date {
+  display: flex;
+  flex-direction: column;
+  margin-top: 10px;
+}
+
+.edit-button-group {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+  gap: 40px;
+}
+
+.edit-save{
+  background-color: #00ff08;
+  color:white;
+  font-weight: bold;
+}
+
+.edit-cancel{
+  background-color: #ff0000;
+  color: white;
+  font-weight: bold;
+}
+
+/*Delete*/
+.delete-modal {
+  position: fixed;
+  z-index: 9999;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.delete-modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  width: 400px;
+  height: 200px;
+  max-width: 90%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+h2.delete-title {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.delete-button-group {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+}
+
+button {
+  padding: 10px 20px;
+  border: 2px solid #000000;
+  cursor: pointer;
+  font-size: 16px;
+  border-radius: 4px;
+}
+
+.confirm-button {
+  background-color: #ff0000;
+  margin-top: 20px;
+  color: white;
+  font-weight: bold;
+}
+
+.cancel-button {
+  background-color: #595858;
+  margin-top: 20px;
+  color: white;
+  font-weight: bold;
+}
 
 /*form styles*/
+.form {
+  margin-top: 10px;
+  font-size: 24px;
+}
+
 .form-group {
   margin-bottom: 12px;
   width: 100%;
 }
+
 .form-group label {
   display: block;
   font-weight: bold;
 }
-.form-group input,.form-group select {
+
+.form-group input,
+.form-group select {
   padding: 8px;
-  border: 1px solid #ccc;
+  border: 2px solid #ccc;
   border-radius: 4px;
   width: 100%;
 }
+
 .data-form {
   align-items: center;
   display: flex;
   flex-direction: column;
   width: 100%;
 }
+
 .form-row {
   display: flex;
   gap: 50px;
   width: 100%;
+  margin-top: 10px;
 }
-#nAmount,#isPrint,#dRelease {
+
+#nAmount,
+#isPrint,
+#dRelease {
   width: 200px;
 }
+
 .form-radio-group {
-  align-items: center;
+  display: flex;
   flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  ;
 }
+
 #isPrint {
   width: auto;
 }
+
 .form-radio {
   display: flex;
   align-items: center;
   margin: 10px;
   gap: 10px;
+  white-space: nowrap;
 }
+
 .button-group {
   display: flex;
   gap: 50px;
 }
-button[type="submit"], button[type="reset"] {
+
+button[type="submit"],
+button[type="reset"] {
   padding: 10px 20px;
   border: solid 2px #000000;
   border-radius: 4px;
@@ -93,9 +278,11 @@ button[type="submit"], button[type="reset"] {
   font-weight: bold;
   font-family: Arial;
 }
-button[type="submit"]{
+
+button[type="submit"] {
   background-color: #00ff08;
 }
-button[type="reset"]{
+
+button[type="reset"] {
   background-color: #ff0000;
 }
