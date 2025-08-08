@@ -77,7 +77,7 @@ export default function DataTable() {
   // สร้างฟอร์มเพิ่มข้อมูลใหม่
   const [newRow, setNewRow] = useState({
     sName: '',
-    nAmount: 0,
+    nAmount: '',
     isPrint: true,
     dRelease: '',
     sAuthor: '',
@@ -98,153 +98,203 @@ export default function DataTable() {
   };
 
   // บันทึกข้อมูลใหม่เมื่อ Submit
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const nextId = data.length > 0 ? Math.max(...data.map(d => d.nNo)) + 1 : 1;
+const handleSubmit = (e: React.FormEvent) => {
+  e.preventDefault();
 
-    const newItem: DataRow = {
-      nNo: nextId,
-      sName: newRow.sName,
-      nAmount: newRow.nAmount,
-      isPrint: newRow.isPrint,
-      dRelease: new Date(newRow.dRelease),
-      sAuthor: newRow.sAuthor,
-      sCategory: newRow.sCategory
-    };
+  // Validate Title ไม่ว่างและไม่ซ้ำ
+  if (!newRow.sName.trim()) {
+    alert('กรุณากรอก Title');
+    return;
+  }
+  const isDuplicate = data.some(item => item.sName.toLowerCase() === newRow.sName.trim().toLowerCase());
+  if (isDuplicate) {
+    alert('Title ซ้ำกับรายการที่มีอยู่');
+    return;
+  }
 
-    setData(prev => [...prev, newItem]); // เพิ่มข้อมูลใหม่ลงใน state
-    // เคลียร์ฟอร์ม
-    setNewRow({ sName: '', nAmount: 0, isPrint: true, dRelease: '', sAuthor: '', sCategory: '' });
+  // Validate Author และ Category ไม่ให้มีตัวเลข
+  const hasNumber = (str: string) => /\d/.test(str);
+  if (hasNumber(newRow.sAuthor)) {
+    alert('Author ต้องไม่มีตัวเลข');
+    return;
+  }
+  if (hasNumber(newRow.sCategory)) {
+    alert('Category ต้องไม่มีตัวเลข');
+    return;
+  }
+
+  const nextId = data.length > 0 ? Math.max(...data.map(d => d.nNo)) + 1 : 1;
+
+  const newItem: DataRow = {
+    nNo: nextId,
+    sName: newRow.sName,
+    nAmount: Number(newRow.nAmount),
+    isPrint: newRow.isPrint,
+    dRelease: new Date(newRow.dRelease),
+    sAuthor: newRow.sAuthor,
+    sCategory: newRow.sCategory
   };
+
+  setData(prev => [...prev, newItem]);
+  setNewRow({ sName: '', nAmount: '', isPrint: true, dRelease: '', sAuthor: '', sCategory: '' });
+};
 
   return (
     <div>
-      <h1 className='table'>รายการข้อมูล</h1>
-      <table className='data-table'>
-        <thead>
-          <tr>
-            <th>No</th><th>Title</th><th>Price</th><th>In Stock</th>
-            <th>Publish Date</th><th>Author</th><th>Category</th><th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.map(row => (
-            <tr key={row.nNo}>
-              <td className='col-center'>{row.nNo}</td>
-              <td>{row.sName}</td>
-              <td className='col-center'>{row.nAmount}</td>
-              <td className={`col-center ${row.isPrint ? 'status-printed' : 'status-unprinted'}`}>
-                {row.isPrint ? 'พิมพ์แล้ว' : 'ยังไม่พิมพ์'}
-              </td>
-              <td className='col-center'>{formattedDate(row.dRelease)}</td>
-              <td>{row.sAuthor}</td>
-              <td>{row.sCategory}</td>
-              <td className='col-center'>
-                <div className='action-buttons'>
-                  <button onClick={() => handleEdit(row.nNo)} className='edit-button'>Edit</button>
-                  <button onClick={() => handleDelete(row.nNo)} className='delete-button'>Delete</button>
-                </div>
-              </td>
+      <div className='input-data'>
+        <h1 className='table'>รายการข้อมูล</h1>
+        <table className='data-table'>
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>Title</th>
+              <th>Price</th>
+              <th>Stock</th>
+              <th>Publish Date</th>
+              <th>Author</th>
+              <th>Category</th>
+              <th>Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {data.map(row => (
+              <tr key={row.nNo}>
+                <td className='col-center'>{row.nNo}</td>
+                <td>{row.sName}</td>
+                <td className='col-center'>{row.nAmount}</td>
+                <td className={`col-center ${row.isPrint ? 'status-printed' : 'status-unprinted'}`}>
+                  {row.isPrint ? 'In Stock' : 'Out Stock'}
+                </td>
+                <td className='col-center'>{formattedDate(row.dRelease)}</td>
+                <td>{row.sAuthor}</td>
+                <td>{row.sCategory}</td>
+                <td className='col-center'>
+                  <div className='action-buttons'>
+                    <button onClick={() => handleEdit(row.nNo)} className='edit-button'>Edit</button>
+                    <button onClick={() => handleDelete(row.nNo)} className='delete-button'>Delete</button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
 
-      {/* Modal แก้ไขข้อมูล */}
-      {isModalOpen && editRow && (
-        <div className="modal">
-          <div className="modal-content">
-            <h2>Edit Row #{editRow.nNo}</h2>
-            <div className='edit-form-text'>
-              <div className='edit-form-row'>
-                <label>Name:</label>
-                <input type="text" value={editRow.sName} onChange={(e) => setEditRow({ ...editRow, sName: e.target.value })} />
-                <label>Amount:</label>
-                <input type="number" value={editRow.nAmount} onChange={(e) => setEditRow({ ...editRow, nAmount: Number(e.target.value) })} />
-              </div>
-              <div className='edit-form-row'>
-                <label>Author:</label>
-                <input type="text" value={editRow.sAuthor} onChange={(e) => setEditRow({ ...editRow, sAuthor: e.target.value })} />
-                <label>Category:</label>
-                <input type="text" value={editRow.sCategory} onChange={(e) => setEditRow({ ...editRow, sCategory: e.target.value })} />
-              </div>
-              <div className='edit-form-radio'>
-                <label>Status:</label>
-                <div className='edit-radio-group'>
-                  <input type="radio" name="status" checked={editRow.isPrint === true} onChange={() => setEditRow({ ...editRow, isPrint: true })} /> พิมพ์แล้ว
-                  <input type="radio" name="status" checked={editRow.isPrint === false} onChange={() => setEditRow({ ...editRow, isPrint: false })} /> ยังไม่พิมพ์
+        {/* Modal แก้ไขข้อมูล */}
+        {isModalOpen && editRow && (
+          <div className="modal">
+            <div className="modal-content">
+              <h2>Edit Row #{editRow.nNo}</h2>
+              <div className='edit-form-text'>
+                <div className='edit-form-row'>
+                  <label className='label-edit'>Name:</label>
+                  <input type="text" value={editRow.sName} onChange={(e) => setEditRow({ ...editRow, sName: e.target.value })} />
+                  <label className='label-edit'>Amount:</label>
+                  <input type="number" value={editRow.nAmount} onChange={(e) => setEditRow({ ...editRow, nAmount: Number(e.target.value) })} />
+                </div>
+                <div className='edit-form-row'>
+                  <label className='label-edit'>Author:</label>
+                  <input type="text" value={editRow.sAuthor} onChange={(e) => setEditRow({ ...editRow, sAuthor: e.target.value })} />
+                  <label className='label-edit'>Category:</label>
+                  <input type="text" value={editRow.sCategory} onChange={(e) => setEditRow({ ...editRow, sCategory: e.target.value })} />
+                </div>
+                <div className='edit-form-radio'>
+                  <label className='label-edit'>Stock:</label>
+                  <div className='edit-radio-group'>
+                    <input type="radio" name="status" checked={editRow.isPrint === true} onChange={() => setEditRow({ ...editRow, isPrint: true })} /> In Stock
+                    <input type="radio" name="status" checked={editRow.isPrint === false} onChange={() => setEditRow({ ...editRow, isPrint: false })} /> Out Stock
+                  </div>
+                </div>
+                <div className='edit-form-date'>
+                  <label className='label-edit'>Release Date:</label>
+                  <input type="date" value={editRow.dRelease.toISOString().substring(0, 10)} onChange={(e) => setEditRow({ ...editRow, dRelease: new Date(e.target.value) })} />
+                </div>
+                <div className='edit-button-group'>
+                  <button onClick={handleModalSave} className='edit-save'>Save</button>
+                  <button onClick={handleModalClose} className='edit-cancel'>Cancel</button>
                 </div>
               </div>
-              <div className='edit-form-date'>
-                <label>Release Date:</label>
-                <input type="date" value={editRow.dRelease.toISOString().substring(0, 10)} onChange={(e) => setEditRow({ ...editRow, dRelease: new Date(e.target.value) })} />
+            </div>
+          </div>
+        )}
+
+        {/* Modal ยืนยันลบข้อมูล */}
+        {isDeleteConfirmOpen && (
+          <div className="modal">
+            <div className="delete-modal-content">
+              <h2>ยืนยันการลบ</h2>
+              <p>คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้ ?</p>
+              <div className="delete-button-group">
+                <button onClick={cancelDelete} className='cancel-button'>ยกเลิก</button>
+                <button onClick={confirmDelete} className='confirm-button'>ลบ</button>
               </div>
-              <div className='edit-button-group'>
-                <button onClick={handleModalSave} className='edit-save'>Save</button>
-                <button onClick={handleModalClose} className='edit-cancel'>Cancel</button>
+            </div>
+          </div>
+        )}
+
+        <hr />
+
+        {/* แบบฟอร์มเพิ่มข้อมูลใหม่ */}
+        <h1 className='form'>เพิ่มรายการ</h1>
+        <form className='data-form' onSubmit={handleSubmit}>
+          <div className='form-row'>
+            <div className='form-group'>
+              <label>Title:</label>
+              <input type='text' name='sName' value={newRow.sName} onChange={handleInputChange} required />
+            </div>
+            <div className='form-group'>
+              <label>Price:</label>
+              <input
+                type="number"
+                name="nAmount"
+                value={newRow.nAmount}
+                onChange={(e) => {
+                  let value = e.target.value;
+                  if (value.startsWith('0')) {
+                    value = value.replace(/^0+/, '');
+                  }
+                  setNewRow(prev => ({ ...prev, nAmount: value }));
+                }}
+                required
+                min={0}
+              />
+            </div>
+          </div>
+          <div className='form-row'>
+            <div className='form-group'>
+              <label>Stock:</label>
+              <div className='form-radio-group'>
+                <label>
+                  <input type="radio" name="isPrint" value="1" checked={newRow.isPrint === true} onChange={handleInputChange} />
+                  In Stock
+                </label>
+                <label>
+                  <input type="radio" name="isPrint" value="0" checked={newRow.isPrint === false} onChange={handleInputChange} />
+                  Out Stock
+                </label>
               </div>
+
+            </div>
+            <div className='form-group'>
+              <label>Publish Date:</label>
+              <input type='date' name='dRelease' value={newRow.dRelease} onChange={handleInputChange} required />
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Modal ยืนยันลบข้อมูล */}
-      {isDeleteConfirmOpen && (
-        <div className="modal">
-          <div className="delete-modal-content">
-            <h2>ยืนยันการลบ</h2>
-            <p>คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้ ?</p>
-            <div className="delete-button-group">
-              <button onClick={cancelDelete} className='cancel-button'>ยกเลิก</button>
-              <button onClick={confirmDelete} className='confirm-button'>ลบ</button>
+          <div className='form-row'>
+            <div className='form-group'>
+              <label>Author:</label>
+              <input type='text' name='sAuthor' value={newRow.sAuthor} onChange={handleInputChange} required />
+            </div>
+            <div className='form-group'>
+              <label>Category:</label>
+              <input type='text' name='sCategory' value={newRow.sCategory} onChange={handleInputChange} required />
             </div>
           </div>
-        </div>
-      )}
-
-      <hr />
-
-      {/* แบบฟอร์มเพิ่มข้อมูลใหม่ */}
-      <h1 className='form'>เพิ่มรายการ</h1>
-      <form className='data-form' onSubmit={handleSubmit}>
-        <div className='form-row'>
-          <div className='form-group'>
-            <label>Title:</label>
-            <input type='text' name='sName' value={newRow.sName} onChange={handleInputChange} required />
+          <div className='button-group'>
+            <button type='submit'>Submit</button>
+            <button type='reset' onClick={() => setNewRow({ sName: '', nAmount: '', isPrint: true, dRelease: '', sAuthor: '', sCategory: '' })}>Clear</button>
           </div>
-          <div className='form-group'>
-            <label>Price:</label>
-            <input type='number' name='nAmount' value={newRow.nAmount} onChange={handleInputChange} required min={0} />
-          </div>
-        </div>
-        <div className='form-row'>
-          <div className='form-group'>
-            <label>In Stock:</label>
-            <div className='form-radio-group'>
-              <label><input type="radio" name="isPrint" value="1" checked={newRow.isPrint === true} onChange={handleInputChange} /> พิมพ์แล้ว</label>
-              <label><input type="radio" name="isPrint" value="0" checked={newRow.isPrint === false} onChange={handleInputChange} /> ยังไม่พิมพ์</label>
-            </div>
-          </div>
-          <div className='form-group'>
-            <label>Publish Date:</label>
-            <input type='date' name='dRelease' value={newRow.dRelease} onChange={handleInputChange} required />
-          </div>
-        </div>
-        <div className='form-row'>
-          <div className='form-group'>
-            <label>Author:</label>
-            <input type='text' name='sAuthor' value={newRow.sAuthor} onChange={handleInputChange} required />
-          </div>
-          <div className='form-group'>
-            <label>Category:</label>
-            <input type='text' name='sCategory' value={newRow.sCategory} onChange={handleInputChange} required />
-          </div>
-        </div>
-        <div className='button-group'>
-          <button type='submit'>Submit</button>
-          <button type='reset' onClick={() => setNewRow({ sName: '', nAmount: 0, isPrint: true, dRelease: '', sAuthor: '', sCategory: '' })}>Clear</button>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   );
 }
