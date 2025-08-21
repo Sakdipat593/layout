@@ -33,21 +33,48 @@ type Errors = {
   sCategory?: string;
 };
 
+// ฟังก์ชันแปลงวันที่จาก backend
+const parsePublishDate = (value: any): Date | null => {
+  if (!value) return null; // null หรือ undefined
+  if (typeof value === 'string') {
+    if (value.includes('/')) {
+      // ถ้าเป็น dd/MM/yyyy
+      let [dd, mm, yyyy] = value.split('/');
+      if (parseInt(yyyy) > 2500) yyyy = (parseInt(yyyy) - 543).toString(); // ปีไทย → ค.ศ.
+      const date = new Date(`${yyyy}-${mm}-${dd}`);
+      return isNaN(date.getTime()) ? null : date;
+    } else {
+      const date = new Date(value);
+      return isNaN(date.getTime()) ? null : date;
+    }
+  }
+  return null;
+};
+
+// ฟังก์ชันแปลงวันที่เป็น DD-MM-YYYY ปีไทย
+const formattedDate = (date: Date | null) => {
+  if (!date) return ''; // null → empty string
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear() + 543; // แปลงเป็นปีไทย
+  return `${day}-${month}-${year}`;
+};
+
 export default function DataTable() {
   const [data, setData] = useState<DataRow[]>([]); // เริ่มด้วย []
 
-  // ฟังก์ชันดึงข้อมูลจาก backend
+   // ดึงข้อมูลจาก backend
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get("https://localhost:7234/Book/OnloadData");
+        const response = await axios.get("http://localhost:5263/Book/OnloadData");
         if (response.data && Array.isArray(response.data.objResult)) {
           const mappedData: DataRow[] = response.data.objResult.map((item: any, index: number) => ({
-            nNo: index + 1, // ใช้ index แทน nNo ถ้า backend ไม่มี
+            nNo: index + 1,
             sName: item.sTitle,
             nAmount: item.nPrice,
             isPrint: item.nStock,
-            dRelease: new Date(item.nPublishDate.split('/').reverse().join('-')), // แปลง "dd/MM/yyyy" -> Date
+            dRelease: parsePublishDate(item.nPublishDate), // ใช้ฟังก์ชัน parse
             sAuthor: item.sAuthorName,
             sCategory: item.sCategoryName
           }));
@@ -60,15 +87,6 @@ export default function DataTable() {
 
     fetchData();
   }, []);
-
-
-  // ฟังก์ชันแปลงวันที่เป็น DD-MM-YYYY
-  const formattedDate = (date: Date) => {
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}-${month}-${year}`;
-  };
 
   // ===== Modal แก้ไขข้อมูล =====
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -192,7 +210,7 @@ export default function DataTable() {
       nPrice: Number(newRow.nAmount),
       nStock: newRow.isPrint,
       nPublishDate: newRow.dRelease,
-      sAuthorName: newRow.sAuthor.trim(),  
+      sAuthorName: newRow.sAuthor.trim(),
       sCategoryName: newRow.sCategory.trim()
     };
 
