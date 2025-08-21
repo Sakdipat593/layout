@@ -1,0 +1,87 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\ASUS\\Desktop\\New folder\\backend\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{4CD26029-CE6A-494F-9066-CD83CE259FE8}|backend.csproj|c:\\users\\asus\\desktop\\new folder\\backend\\ef\\services\\bookservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4CD26029-CE6A-494F-9066-CD83CE259FE8}|backend.csproj|solutionrelative:ef\\services\\bookservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4CD26029-CE6A-494F-9066-CD83CE259FE8}|backend.csproj|c:\\users\\asus\\desktop\\new folder\\backend\\ef\\bookdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4CD26029-CE6A-494F-9066-CD83CE259FE8}|backend.csproj|solutionrelative:ef\\bookdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4CD26029-CE6A-494F-9066-CD83CE259FE8}|backend.csproj|c:\\users\\asus\\desktop\\new folder\\backend\\ef\\models\\bookmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4CD26029-CE6A-494F-9066-CD83CE259FE8}|backend.csproj|solutionrelative:ef\\models\\bookmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{4CD26029-CE6A-494F-9066-CD83CE259FE8}|backend.csproj|c:\\users\\asus\\desktop\\new folder\\backend\\ef\\tb_book.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{4CD26029-CE6A-494F-9066-CD83CE259FE8}|backend.csproj|solutionrelative:ef\\tb_book.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 2,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "BookDBContext.cs",
+              "DocumentMoniker": "C:\\Users\\ASUS\\Desktop\\New folder\\backend\\EF\\BookDBContext.cs",
+              "RelativeDocumentMoniker": "EF\\BookDBContext.cs",
+              "ToolTip": "C:\\Users\\ASUS\\Desktop\\New folder\\backend\\EF\\BookDBContext.cs",
+              "RelativeToolTip": "EF\\BookDBContext.cs",
+              "ViewState": "AgIAAAwAAAAAAAAAAAA1wBcAAAAEAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-20T10:36:34.528Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "BookModel.cs",
+              "DocumentMoniker": "C:\\Users\\ASUS\\Desktop\\New folder\\backend\\EF\\Models\\BookModel.cs",
+              "RelativeDocumentMoniker": "EF\\Models\\BookModel.cs",
+              "ToolTip": "C:\\Users\\ASUS\\Desktop\\New folder\\backend\\EF\\Models\\BookModel.cs",
+              "RelativeToolTip": "EF\\Models\\BookModel.cs",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAABEAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-20T10:00:51.414Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "BookService.cs",
+              "DocumentMoniker": "C:\\Users\\ASUS\\Desktop\\New folder\\backend\\EF\\Services\\BookService.cs",
+              "RelativeDocumentMoniker": "EF\\Services\\BookService.cs",
+              "ToolTip": "C:\\Users\\ASUS\\Desktop\\New folder\\backend\\EF\\Services\\BookService.cs",
+              "RelativeToolTip": "EF\\Services\\BookService.cs",
+              "ViewState": "AgIAAFsAAAAAAAAAAAD4v2YAAAAkAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-19T03:03:58.471Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "TB_Book.cs",
+              "DocumentMoniker": "C:\\Users\\ASUS\\Desktop\\New folder\\backend\\EF\\TB_Book.cs",
+              "RelativeDocumentMoniker": "EF\\TB_Book.cs",
+              "ToolTip": "C:\\Users\\ASUS\\Desktop\\New folder\\backend\\EF\\TB_Book.cs",
+              "RelativeToolTip": "EF\\TB_Book.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABkAAAAqAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-19T02:41:47.031Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

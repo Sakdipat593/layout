@@ -1,8 +1,9 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './styles.css';
+import axios from 'axios';
 
-// กำหนดโครงสร้างของข้อมูลแต่ละแถว
+// โครงสร้างข้อมูลในตาราง
 type DataRow = {
   nNo: number;
   sName: string;
@@ -13,17 +14,55 @@ type DataRow = {
   sCategory: string;
 };
 
-export default function DataTable() {
-  // สร้าง state สำหรับเก็บข้อมูลทั้งหมด
-  const [data, setData] = useState<DataRow[]>([
-    { nNo: 1, sName: 'PixelBot', nAmount: 10, isPrint: true, dRelease: new Date('2025-08-02'), sAuthor: 'Alice', sCategory: 'AI' },
-    { nNo: 2, sName: 'CodeWizard', nAmount: 5, isPrint: false, dRelease: new Date('2025-08-04'), sAuthor: 'Bob', sCategory: 'DevTools' },
-    { nNo: 3, sName: 'DataNinja', nAmount: 7, isPrint: true, dRelease: new Date('2025-08-05'), sAuthor: 'Charlie', sCategory: 'Analytics' },
-    { nNo: 4, sName: 'QuantumFox', nAmount: 12, isPrint: false, dRelease: new Date('2025-08-06'), sAuthor: 'David', sCategory: 'Quantum' },
-    { nNo: 5, sName: 'LogicBear', nAmount: 9, isPrint: true, dRelease: new Date('2025-08-07'), sAuthor: 'Eve', sCategory: 'Logic' },
-  ]);
+// โครงสร้างข้อมูลในฟอร์มเพิ่มรายการ
+type NewRow = {
+  sName: string;
+  nAmount: string;   // เก็บเป็น string เพื่อควบคุมการพิมพ์/ลบเลข 0 นำหน้า
+  isPrint: boolean;
+  dRelease: string;  // YYYY-MM-DD
+  sAuthor: string;
+  sCategory: string;
+};
 
-  // ฟังก์ชันแปลงวันที่ให้อยู่ในรูปแบบ DD-MM-YYYY
+// โครงสร้างข้อความ error ของแต่ละช่อง
+type Errors = {
+  sName?: string;
+  nAmount?: string;
+  dRelease?: string;
+  sAuthor?: string;
+  sCategory?: string;
+};
+
+export default function DataTable() {
+  const [data, setData] = useState<DataRow[]>([]); // เริ่มด้วย []
+
+  // ฟังก์ชันดึงข้อมูลจาก backend
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get("https://localhost:7234/Book/OnloadData");
+        if (response.data && Array.isArray(response.data.objResult)) {
+          const mappedData: DataRow[] = response.data.objResult.map((item: any, index: number) => ({
+            nNo: index + 1, // ใช้ index แทน nNo ถ้า backend ไม่มี
+            sName: item.sTitle,
+            nAmount: item.nPrice,
+            isPrint: item.nStock,
+            dRelease: new Date(item.nPublishDate.split('/').reverse().join('-')), // แปลง "dd/MM/yyyy" -> Date
+            sAuthor: item.sAuthorName,
+            sCategory: item.sCategoryName
+          }));
+          setData(mappedData);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+
+  // ฟังก์ชันแปลงวันที่เป็น DD-MM-YYYY
   const formattedDate = (date: Date) => {
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -31,39 +70,39 @@ export default function DataTable() {
     return `${day}-${month}-${year}`;
   };
 
-  // จัดการ Modal แก้ไขข้อมูล
+  // ===== Modal แก้ไขข้อมูล =====
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editRow, setEditRow] = useState<DataRow | null>(null);
 
   const handleEdit = (nNo: number) => {
-    const row = data.find(item => item.nNo === nNo); // ค้นหาข้อมูลที่ต้องการแก้ไข
+    const row = data.find(item => item.nNo === nNo);
     if (row) {
-      setEditRow(row); // เก็บข้อมูลนั้นลงใน state
-      setIsModalOpen(true); // เปิด Modal
+      setEditRow(row);
+      setIsModalOpen(true);
     }
   };
 
   const handleModalSave = () => {
     if (editRow) {
-      setData(prev => prev.map(item => item.nNo === editRow.nNo ? editRow : item)); // แก้ไขข้อมูลใน state
-      setIsModalOpen(false); // ปิด Modal
+      setData(prev => prev.map(item => item.nNo === editRow.nNo ? editRow : item));
+      setIsModalOpen(false);
     }
   };
 
-  const handleModalClose = () => setIsModalOpen(false); // ปิด Modal แบบไม่บันทึก
+  const handleModalClose = () => setIsModalOpen(false);
 
-  // จัดการ Modal ยืนยันการลบ
+  // ===== Modal ยืนยันลบ =====
   const [deleteRowId, setDeleteRowId] = useState<number | null>(null);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
   const handleDelete = (id: number) => {
     setDeleteRowId(id);
-    setIsDeleteConfirmOpen(true); // แสดง Modal ยืนยันลบ
+    setIsDeleteConfirmOpen(true);
   };
 
   const confirmDelete = () => {
     if (deleteRowId !== null) {
-      setData(prev => prev.filter(row => row.nNo !== deleteRowId)); // ลบข้อมูลจาก state
+      setData(prev => prev.filter(row => row.nNo !== deleteRowId));
     }
     setIsDeleteConfirmOpen(false);
     setDeleteRowId(null);
@@ -74,8 +113,8 @@ export default function DataTable() {
     setDeleteRowId(null);
   };
 
-  // สร้างฟอร์มเพิ่มข้อมูลใหม่
-  const [newRow, setNewRow] = useState({
+  // ===== ฟอร์มเพิ่มข้อมูลใหม่ + validation =====
+  const [newRow, setNewRow] = useState<NewRow>({
     sName: '',
     nAmount: '',
     isPrint: true,
@@ -84,65 +123,117 @@ export default function DataTable() {
     sCategory: ''
   });
 
-  // เมื่อมีการเปลี่ยนแปลงค่าใน input
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type } = e.target;
-    setNewRow(prev => ({
-      ...prev,
-      [name]: name === 'isPrint'
-        ? value === '1'
-        : type === 'number'
-          ? Number(value)
-          : value
-    }));
-  };
+  const [errors, setErrors] = useState<Errors>({});
 
-  // บันทึกข้อมูลใหม่เมื่อ Submit
-const handleSubmit = (e: React.FormEvent) => {
-  e.preventDefault();
-
-  // Validate Title ไม่ว่างและไม่ซ้ำ
-  if (!newRow.sName.trim()) {
-    alert('กรุณากรอก Title');
-    return;
-  }
-  const isDuplicate = data.some(item => item.sName.toLowerCase() === newRow.sName.trim().toLowerCase());
-  if (isDuplicate) {
-    alert('Title ซ้ำกับรายการที่มีอยู่');
-    return;
-  }
-
-  // Validate Author และ Category ไม่ให้มีตัวเลข
+  // helper
   const hasNumber = (str: string) => /\d/.test(str);
-  if (hasNumber(newRow.sAuthor)) {
-    alert('Author ต้องไม่มีตัวเลข');
-    return;
-  }
-  if (hasNumber(newRow.sCategory)) {
-    alert('Category ต้องไม่มีตัวเลข');
-    return;
-  }
 
-  const nextId = data.length > 0 ? Math.max(...data.map(d => d.nNo)) + 1 : 1;
+  // อัปเดตค่า input + จัดการ logic พิเศษของแต่ละช่อง
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    let nextValue: string | boolean = value;
 
-  const newItem: DataRow = {
-    nNo: nextId,
-    sName: newRow.sName,
-    nAmount: Number(newRow.nAmount),
-    isPrint: newRow.isPrint,
-    dRelease: new Date(newRow.dRelease),
-    sAuthor: newRow.sAuthor,
-    sCategory: newRow.sCategory
+    if (name === 'isPrint') {
+      nextValue = value === '1';
+    } else if (name === 'nAmount') {
+      let v = value;
+      if (v.startsWith('0')) v = v.replace(/^0+/, '');
+      if (v === '-') v = '';
+      nextValue = v;
+    }
+
+    setNewRow(prev => ({ ...prev, [name]: nextValue }));
+    setErrors(prev => ({ ...prev, [name]: '' }));
   };
 
-  setData(prev => [...prev, newItem]);
-  setNewRow({ sName: '', nAmount: '', isPrint: true, dRelease: '', sAuthor: '', sCategory: '' });
-};
+  // ตรวจทุกช่องและเซ็ตข้อความ error ใต้ช่อง
+  const validateForm = () => {
+    const newErrors: Errors = {};
+
+    if (!newRow.sName.trim()) {
+      newErrors.sName = 'กรุณากรอก Title';
+    } else if (data.some(item => item.sName.toLowerCase() === newRow.sName.trim().toLowerCase())) {
+      newErrors.sName = 'Title ซ้ำกับรายการที่มีอยู่';
+    }
+
+    if (!newRow.nAmount.trim()) {
+      newErrors.nAmount = 'กรุณากรอก Price';
+    } else if (Number(newRow.nAmount) <= 0) {
+      newErrors.nAmount = 'กรุณากรอก Price มากกว่า 0';
+    }
+
+    if (!newRow.dRelease) {
+      newErrors.dRelease = 'กรุณาเลือก Publish Date';
+    }
+
+    if (!newRow.sAuthor.trim()) {
+      newErrors.sAuthor = 'กรุณากรอก Author';
+    } else if (hasNumber(newRow.sAuthor)) {
+      newErrors.sAuthor = 'Author ต้องไม่มีตัวเลข';
+    }
+
+    if (!newRow.sCategory.trim()) {
+      newErrors.sCategory = 'กรุณากรอก Category';
+    } else if (hasNumber(newRow.sCategory)) {
+      newErrors.sCategory = 'Category ต้องไม่มีตัวเลข';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();            // ป้องกัน reload หน้า
+    if (!validateForm()) return;   // ตรวจ validation
+
+    // เตรียมข้อมูลสำหรับส่งไป backend
+    const payload = {
+      sTitle: newRow.sName.trim(),
+      nPrice: Number(newRow.nAmount),
+      nStock: newRow.isPrint,
+      nPublishDate: newRow.dRelease,
+      sAuthorName: newRow.sAuthor.trim(),  
+      sCategoryName: newRow.sCategory.trim()
+    };
+
+
+
+    try {
+      const response = await axios.post("https://localhost:7234/Book/Create", payload);
+
+      if (response.data.nStatusCode === 200) {
+        // เพิ่มข้อมูลใน table ของ frontend
+        const nextId = data.length > 0 ? Math.max(...data.map(d => d.nNo)) + 1 : 1;
+        const newItem: DataRow = {
+          nNo: nextId,
+          sName: newRow.sName.trim(),
+          nAmount: Number(newRow.nAmount),
+          isPrint: newRow.isPrint,
+          dRelease: new Date(newRow.dRelease),
+          sAuthor: newRow.sAuthor.trim(),
+          sCategory: newRow.sCategory.trim()
+        };
+        setData(prev => [...prev, newItem]);
+
+        // เคลียร์ฟอร์ม
+        setNewRow({ sName: '', nAmount: '', isPrint: true, dRelease: '', sAuthor: '', sCategory: '' });
+        setErrors({});
+        alert("บันทึกสำเร็จ!");
+      } else {
+        alert("เกิดข้อผิดพลาด: " + response.data.sMessage);
+      }
+    } catch (error: any) {
+      console.error(error);
+      alert("เกิดข้อผิดพลาดในการเชื่อมต่อกับ server");
+    }
+  };
+
 
   return (
     <div>
       <div className='input-data'>
         <h1 className='table'>รายการข้อมูล</h1>
+
         <table className='data-table'>
           <thead>
             <tr>
@@ -157,7 +248,7 @@ const handleSubmit = (e: React.FormEvent) => {
             </tr>
           </thead>
           <tbody>
-            {data.map(row => (
+            {Array.isArray(data) && data.map(row => (
               <tr key={row.nNo}>
                 <td className='col-center'>{row.nNo}</td>
                 <td>{row.sName}</td>
@@ -187,26 +278,57 @@ const handleSubmit = (e: React.FormEvent) => {
               <div className='edit-form-text'>
                 <div className='edit-form-row'>
                   <label className='label-edit'>Name:</label>
-                  <input type="text" value={editRow.sName} onChange={(e) => setEditRow({ ...editRow, sName: e.target.value })} />
+                  <input
+                    type="text"
+                    value={editRow.sName}
+                    onChange={(e) => setEditRow({ ...editRow, sName: e.target.value })}
+                  />
                   <label className='label-edit'>Amount:</label>
-                  <input type="number" value={editRow.nAmount} onChange={(e) => setEditRow({ ...editRow, nAmount: Number(e.target.value) })} />
+                  <input
+                    type="number"
+                    value={editRow.nAmount}
+                    onChange={(e) => setEditRow({ ...editRow, nAmount: Number(e.target.value) })}
+                    min={0}
+                  />
                 </div>
                 <div className='edit-form-row'>
                   <label className='label-edit'>Author:</label>
-                  <input type="text" value={editRow.sAuthor} onChange={(e) => setEditRow({ ...editRow, sAuthor: e.target.value })} />
+                  <input
+                    type="text"
+                    value={editRow.sAuthor}
+                    onChange={(e) => setEditRow({ ...editRow, sAuthor: e.target.value })}
+                  />
                   <label className='label-edit'>Category:</label>
-                  <input type="text" value={editRow.sCategory} onChange={(e) => setEditRow({ ...editRow, sCategory: e.target.value })} />
+                  <input
+                    type="text"
+                    value={editRow.sCategory}
+                    onChange={(e) => setEditRow({ ...editRow, sCategory: e.target.value })}
+                  />
                 </div>
                 <div className='edit-form-radio'>
                   <label className='label-edit'>Stock:</label>
                   <div className='edit-radio-group'>
-                    <input type="radio" name="status" checked={editRow.isPrint === true} onChange={() => setEditRow({ ...editRow, isPrint: true })} /> In Stock
-                    <input type="radio" name="status" checked={editRow.isPrint === false} onChange={() => setEditRow({ ...editRow, isPrint: false })} /> Out Stock
+                    <input
+                      type="radio"
+                      name="status"
+                      checked={editRow.isPrint === true}
+                      onChange={() => setEditRow({ ...editRow, isPrint: true })}
+                    /> In Stock
+                    <input
+                      type="radio"
+                      name="status"
+                      checked={editRow.isPrint === false}
+                      onChange={() => setEditRow({ ...editRow, isPrint: false })}
+                    /> Out Stock
                   </div>
                 </div>
                 <div className='edit-form-date'>
                   <label className='label-edit'>Release Date:</label>
-                  <input type="date" value={editRow.dRelease.toISOString().substring(0, 10)} onChange={(e) => setEditRow({ ...editRow, dRelease: new Date(e.target.value) })} />
+                  <input
+                    type="date"
+                    value={editRow.dRelease.toISOString().substring(0, 10)}
+                    onChange={(e) => setEditRow({ ...editRow, dRelease: new Date(e.target.value) })}
+                  />
                 </div>
                 <div className='edit-button-group'>
                   <button onClick={handleModalSave} className='edit-save'>Save</button>
@@ -217,7 +339,7 @@ const handleSubmit = (e: React.FormEvent) => {
           </div>
         )}
 
-        {/* Modal ยืนยันลบข้อมูล */}
+        {/* Modal ยืนยันลบ */}
         {isDeleteConfirmOpen && (
           <div className="modal">
             <div className="delete-modal-content">
@@ -233,65 +355,61 @@ const handleSubmit = (e: React.FormEvent) => {
 
         <hr />
 
-        {/* แบบฟอร์มเพิ่มข้อมูลใหม่ */}
+        {/* ฟอร์มเพิ่มข้อมูลใหม่ */}
         <h1 className='form'>เพิ่มรายการ</h1>
-        <form className='data-form' onSubmit={handleSubmit}>
+        <form className='data-form' onSubmit={handleSubmit} noValidate>
+          {/* --- Form Rows --- */}
           <div className='form-row'>
             <div className='form-group'>
               <label>Title:</label>
-              <input type='text' name='sName' value={newRow.sName} onChange={handleInputChange} required />
+              <input type='text' name='sName' value={newRow.sName} onChange={handleInputChange} />
+              {errors.sName && <div style={{ color: 'red', fontSize: '12px', marginTop: 4 }}>{errors.sName}</div>}
             </div>
+
             <div className='form-group'>
               <label>Price:</label>
-              <input
-                type="number"
-                name="nAmount"
-                value={newRow.nAmount}
-                onChange={(e) => {
-                  let value = e.target.value;
-                  if (value.startsWith('0')) {
-                    value = value.replace(/^0+/, '');
-                  }
-                  setNewRow(prev => ({ ...prev, nAmount: value }));
-                }}
-                required
-                min={0}
-              />
+              <input type="number" name="nAmount" value={newRow.nAmount} onChange={handleInputChange} min={0} />
+              {errors.nAmount && <div style={{ color: 'red', fontSize: '12px', marginTop: 4 }}>{errors.nAmount}</div>}
             </div>
           </div>
+
           <div className='form-row'>
             <div className='form-group'>
               <label>Stock:</label>
               <div className='form-radio-group'>
                 <label>
-                  <input type="radio" name="isPrint" value="1" checked={newRow.isPrint === true} onChange={handleInputChange} />
-                  In Stock
+                  <input type="radio" name="isPrint" value="1" checked={newRow.isPrint === true} onChange={handleInputChange} /> In Stock
                 </label>
                 <label>
-                  <input type="radio" name="isPrint" value="0" checked={newRow.isPrint === false} onChange={handleInputChange} />
-                  Out Stock
+                  <input type="radio" name="isPrint" value="0" checked={newRow.isPrint === false} onChange={handleInputChange} /> Out Stock
                 </label>
               </div>
-
             </div>
+
             <div className='form-group'>
               <label>Publish Date:</label>
-              <input type='date' name='dRelease' value={newRow.dRelease} onChange={handleInputChange} required />
+              <input type='date' name='dRelease' value={newRow.dRelease} onChange={handleInputChange} />
+              {errors.dRelease && <div style={{ color: 'red', fontSize: '12px', marginTop: 4 }}>{errors.dRelease}</div>}
             </div>
           </div>
+
           <div className='form-row'>
             <div className='form-group'>
               <label>Author:</label>
-              <input type='text' name='sAuthor' value={newRow.sAuthor} onChange={handleInputChange} required />
+              <input type='text' name='sAuthor' value={newRow.sAuthor} onChange={handleInputChange} />
+              {errors.sAuthor && <div style={{ color: 'red', fontSize: '12px', marginTop: 4 }}>{errors.sAuthor}</div>}
             </div>
+
             <div className='form-group'>
               <label>Category:</label>
-              <input type='text' name='sCategory' value={newRow.sCategory} onChange={handleInputChange} required />
+              <input type='text' name='sCategory' value={newRow.sCategory} onChange={handleInputChange} />
+              {errors.sCategory && <div style={{ color: 'red', fontSize: '12px', marginTop: 4 }}>{errors.sCategory}</div>}
             </div>
           </div>
+
           <div className='button-group'>
             <button type='submit'>Submit</button>
-            <button type='reset' onClick={() => setNewRow({ sName: '', nAmount: '', isPrint: true, dRelease: '', sAuthor: '', sCategory: '' })}>Clear</button>
+            <button type='reset' onClick={() => { setNewRow({ sName: '', nAmount: '', isPrint: true, dRelease: '', sAuthor: '', sCategory: '' }); setErrors({}); }}>Clear</button>
           </div>
         </form>
       </div>
