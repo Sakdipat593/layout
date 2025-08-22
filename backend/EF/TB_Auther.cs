@@ -6,11 +6,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace backend.EF;
 
-[Keyless]
 [Table("TB_Auther")]
 public partial class TB_Auther
 {
-    public int? nAutherID { get; set; }
+    [Key]
+    public int nAutherID { get; set; }
 
     [StringLength(255)]
     [Unicode(false)]

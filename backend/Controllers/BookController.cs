@@ -29,5 +29,15 @@ namespace backend.Controllers
             var result = _bookService.Create(book);
             return StatusCode(result.nStatusCode, result);
         }
+        [HttpDelete]
+        public IActionResult Delete(int id)
+        {
+            if (id <= 0)
+                return BadRequest(new { message = "รหัสหนังสือไม่ถูกต้อง" });
+
+            var result = _bookService.Delete(id);
+            return StatusCode(result.nStatusCode, result);
+        }
+
     }
 }

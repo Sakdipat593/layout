@@ -9,6 +9,7 @@ namespace backend.EF.Services
     {
         ResultAPI OnloadData();
         ResultAPI Create(BookStore book);
+        ResultAPI Delete(int id);
     }
 
     public class BookService : IBookService
@@ -47,7 +48,7 @@ namespace backend.EF.Services
                     sTitle = item.sName ?? "",
                     nPrice = item.nAmount ?? 0, // int? ใช้ ??
                     nStock = item.isPrint ?? false, // bool? ใช้ ??
-                    nPublishDate = item.dRelease.HasValue ? item.dRelease.Value.ToString("dd/MM/yyyy") : "",
+                    nPublishDate = item.dRelease.HasValue ? item.dRelease.Value.ToString("dd/MM/yyyy") : "-",
                     nAuthor = item.nAutherID ?? 0, // int? ใช้ ??
                     sAuthorName = author?.sName ?? "",
                     nCategory = item.nCategoryID ?? 0, // int? ใช้ ??
@@ -88,14 +89,15 @@ namespace backend.EF.Services
                 }
 
                 var bookId = _db.TB_Books.Max(N => N.nBookID) + 1;
-                // ===== เพิ่ม Book =====
+                //===== เพิ่ม Book =====
+                DateTime releaseDate;
                 var newBook = new TB_Book
                 {
                     nBookID = bookId,
                     sName = book.sTitle,
                     nAmount = book.nPrice,
                     isPrint = book.nStock,
-                    dRelease = DateTime.TryParse(book.nPublishDate, out var dt) ? dt : (DateTime?)null,
+                    //dRelease = DateTime.TryParse(book.nPublishDate, out releaseDate) ? releaseDate : null,
                     nAutherID = author.nAutherID,
                     nCategoryID = category.nCategoryID,
                     dCreate = DateTime.Now,
@@ -115,8 +117,30 @@ namespace backend.EF.Services
                 result.nStatusCode = StatusCodes.Status500InternalServerError;
                 result.sMessage = ex.Message;
             }
-
             return result;
         }
+        public ResultAPI Delete(int id)
+        {
+            ResultAPI result = new ResultAPI();
+
+            var book = _db.TB_Books.FirstOrDefault(b => b.nBookID == id);
+            if (book == null)
+            {
+                result.nStatusCode = StatusCodes.Status404NotFound;
+                result.sMessage = "ไม่พบข้อมูล";
+                return result;
+            }
+
+            // Soft Delete
+            book.isDelete = true;
+            book.dUpdate = DateTime.Now;
+
+            _db.SaveChanges();
+
+            result.nStatusCode = StatusCodes.Status200OK;
+            result.sMessage = "ลบข้อมูลสำเร็จ";
+            return result;
+        }
+
     }
 }

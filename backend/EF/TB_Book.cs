@@ -6,11 +6,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace backend.EF;
 
-[Keyless]
 [Table("TB_Book")]
 public partial class TB_Book
 {
-    public int? nBookID { get; set; }
+    [Key]
+    public int nBookID { get; set; }
 
     [StringLength(255)]
     [Unicode(false)]
@@ -31,7 +31,8 @@ public partial class TB_Book
 
     public bool? isDelete { get; set; }
 
-    public DateOnly? dDelete { get; set; }
+    [Column(TypeName = "datetime")]
+    public DateTime? dDelete { get; set; }
 
     public int? nCategoryID { get; set; }
 

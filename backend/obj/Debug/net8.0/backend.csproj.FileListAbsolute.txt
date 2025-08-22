@@ -340,3 +340,4 @@ C:\Users\ASUS\Desktop\New folder\layout\backend\obj\Debug\net8.0\refint\backend.
 C:\Users\ASUS\Desktop\New folder\layout\backend\obj\Debug\net8.0\backend.pdb
 C:\Users\ASUS\Desktop\New folder\layout\backend\obj\Debug\net8.0\backend.genruntimeconfig.cache
 C:\Users\ASUS\Desktop\New folder\layout\backend\obj\Debug\net8.0\ref\backend.dll
+C:\Users\ASUS\Desktop\New folder\layout\backend\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt

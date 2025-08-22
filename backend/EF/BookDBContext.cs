@@ -21,9 +21,30 @@ public partial class BookDBContext : DbContext
 
     public virtual DbSet<TB_Category> TB_Categories { get; set; }
 
-    
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<TB_Auther>(entity =>
+        {
+            entity.HasKey(e => e.nAutherID).HasName("nAutherID");
+
+            entity.Property(e => e.nAutherID).ValueGeneratedNever();
+        });
+
+        modelBuilder.Entity<TB_Book>(entity =>
+        {
+            entity.HasKey(e => e.nBookID).HasName("nBookID");
+
+            entity.Property(e => e.nBookID).ValueGeneratedNever();
+        });
+
+        modelBuilder.Entity<TB_Category>(entity =>
+        {
+            entity.HasKey(e => e.nCategoryID).HasName("nCategoryID");
+
+            entity.Property(e => e.nCategoryID).ValueGeneratedNever();
+        });
+
         OnModelCreatingPartial(modelBuilder);
     }
 

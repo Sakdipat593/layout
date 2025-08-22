@@ -33,48 +33,21 @@ type Errors = {
   sCategory?: string;
 };
 
-// ฟังก์ชันแปลงวันที่จาก backend
-const parsePublishDate = (value: any): Date | null => {
-  if (!value) return null; // null หรือ undefined
-  if (typeof value === 'string') {
-    if (value.includes('/')) {
-      // ถ้าเป็น dd/MM/yyyy
-      let [dd, mm, yyyy] = value.split('/');
-      if (parseInt(yyyy) > 2500) yyyy = (parseInt(yyyy) - 543).toString(); // ปีไทย → ค.ศ.
-      const date = new Date(`${yyyy}-${mm}-${dd}`);
-      return isNaN(date.getTime()) ? null : date;
-    } else {
-      const date = new Date(value);
-      return isNaN(date.getTime()) ? null : date;
-    }
-  }
-  return null;
-};
-
-// ฟังก์ชันแปลงวันที่เป็น DD-MM-YYYY ปีไทย
-const formattedDate = (date: Date | null) => {
-  if (!date) return ''; // null → empty string
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const year = date.getFullYear() + 543; // แปลงเป็นปีไทย
-  return `${day}-${month}-${year}`;
-};
-
 export default function DataTable() {
   const [data, setData] = useState<DataRow[]>([]); // เริ่มด้วย []
 
-   // ดึงข้อมูลจาก backend
+  // ดึงข้อมูลจาก backend
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get("http://localhost:5263/Book/OnloadData");
+        const response = await axios.get("https://localhost:7234/Book/OnloadData");
         if (response.data && Array.isArray(response.data.objResult)) {
           const mappedData: DataRow[] = response.data.objResult.map((item: any, index: number) => ({
             nNo: index + 1,
             sName: item.sTitle,
             nAmount: item.nPrice,
             isPrint: item.nStock,
-            dRelease: parsePublishDate(item.nPublishDate), // ใช้ฟังก์ชัน parse
+            dRelease: (item.nPublishDate), // ใช้ฟังก์ชัน parse
             sAuthor: item.sAuthorName,
             sCategory: item.sCategoryName
           }));
@@ -118,13 +91,32 @@ export default function DataTable() {
     setIsDeleteConfirmOpen(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
+    // log ดูค่า deleteRowId ก่อนเรียก API
+    console.log("deleteRowId:", deleteRowId);
+
     if (deleteRowId !== null) {
-      setData(prev => prev.filter(row => row.nNo !== deleteRowId));
+      try {
+        // เรียก API ลบหนังสือ (soft delete)
+        const response = await axios.delete(`https://localhost:7234/Book/Delete?id=${deleteRowId}`);
+        if (response.data.nStatusCode === 200) {
+          // ลบแถวจาก frontend table
+          setData(prev => prev.filter(row => row.nNo !== deleteRowId));
+          alert("ลบสำเร็จ!");
+        } else {
+          alert("เกิดข้อผิดพลาด: " + response.data.sMessage);
+        }
+      } catch (error: any) {
+        console.error(error);
+        alert("เกิดข้อผิดพลาดในการเชื่อมต่อกับ server");
+      }
     }
+
+    // ปิด modal ทุกกรณี
     setIsDeleteConfirmOpen(false);
     setDeleteRowId(null);
   };
+
 
   const cancelDelete = () => {
     setIsDeleteConfirmOpen(false);
@@ -209,13 +201,11 @@ export default function DataTable() {
       sTitle: newRow.sName.trim(),
       nPrice: Number(newRow.nAmount),
       nStock: newRow.isPrint,
-      nPublishDate: newRow.dRelease,
+      nPublishDate: new Date(newRow.dRelease).toISOString().substring(0, 10),
       sAuthorName: newRow.sAuthor.trim(),
       sCategoryName: newRow.sCategory.trim()
     };
-
-
-
+    console.log(payload)
     try {
       const response = await axios.post("https://localhost:7234/Book/Create", payload);
 
@@ -274,7 +264,7 @@ export default function DataTable() {
                 <td className={`col-center ${row.isPrint ? 'status-printed' : 'status-unprinted'}`}>
                   {row.isPrint ? 'In Stock' : 'Out Stock'}
                 </td>
-                <td className='col-center'>{formattedDate(row.dRelease)}</td>
+                <td className='col-center'>{(row.dRelease) + ''}</td>
                 <td>{row.sAuthor}</td>
                 <td>{row.sCategory}</td>
                 <td className='col-center'>

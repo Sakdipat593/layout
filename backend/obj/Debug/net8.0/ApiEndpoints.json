@@ -17,6 +17,22 @@
   },
   {
     "ContainingType": "backend.Controllers.BookController",
+    "Method": "Delete",
+    "RelativePath": "Book/Delete",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "backend.Controllers.BookController",
     "Method": "OnloadData",
     "RelativePath": "Book/OnloadData",
     "HttpMethod": "GET",

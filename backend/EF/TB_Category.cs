@@ -6,11 +6,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace backend.EF;
 
-[Keyless]
 [Table("TB_Category")]
 public partial class TB_Category
 {
-    public int? nCategoryID { get; set; }
+    [Key]
+    public int nCategoryID { get; set; }
 
     [StringLength(255)]
     [Unicode(false)]
