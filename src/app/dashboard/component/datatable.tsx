@@ -73,12 +73,40 @@ export default function DataTable() {
     }
   };
 
-  const handleModalSave = () => {
+  const handleModalSave = async () => {
     if (editRow) {
-      setData(prev => prev.map(item => item.nNo === editRow.nNo ? editRow : item));
-      setIsModalOpen(false);
+      try {
+        // ส่งข้อมูลไป Backend (API PUT)
+        const payload = {
+          nBookID: editRow.nNo,   // ❗ ตอนนี้คุณใช้ nNo ซึ่งเป็นแค่ลำดับ ต้องแก้ Backend ให้รับ id จริง
+          sTitle: editRow.sName,
+          nPrice: editRow.nAmount,
+          nStock: editRow.isPrint,
+          nPublishDate: editRow.dRelease instanceof Date
+            ? editRow.dRelease.toISOString().substring(0, 10)
+            : editRow.dRelease,
+          sAuthorName: editRow.sAuthor,
+          sCategoryName: editRow.sCategory
+        };
+
+        const response = await axios.put("https://localhost:7234/Book/Edit", payload);
+
+        if (response.data.nStatusCode === 200) {
+          alert("แก้ไขข้อมูลสำเร็จ ");
+
+          // อัปเดต frontend table ด้วยข้อมูลใหม่
+          setData(prev => prev.map(item => item.nNo === editRow.nNo ? editRow : item));
+          setIsModalOpen(false);
+        } else {
+          alert("เกิดข้อผิดพลาด: " + response.data.sMessage);
+        }
+      } catch (error) {
+        console.error(error);
+        alert("เกิดข้อผิดพลาดในการเชื่อมต่อกับ server ");
+      }
     }
   };
+
 
   const handleModalClose = () => setIsModalOpen(false);
 

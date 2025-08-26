@@ -3,6 +3,7 @@ using backend.EF.Models.BookModel;
 using Microsoft.AspNetCore.Http;
 using System.Linq;
 
+
 namespace backend.EF.Services
 {
     public interface IBookService
@@ -10,6 +11,8 @@ namespace backend.EF.Services
         ResultAPI OnloadData();
         ResultAPI Create(BookStore book);
         ResultAPI Delete(int id);
+        ResultAPI Edit(BookStore book);
+
     }
 
     public class BookService : IBookService
@@ -26,7 +29,11 @@ namespace backend.EF.Services
         {
             ResultAPI result = new ResultAPI();
 
-            var lstData = _db.TB_Books.Where(b => b.isDelete != true).ToList();
+            // ดึงเฉพาะ record ที่ยังไม่ถูกลบ
+            var lstData = _db.TB_Books
+                             .Where(b => b.isDelete == false)
+                             .ToList();
+
             var lstAuthor = _db.TB_Authers.ToList();
             var lstCategory = _db.TB_Categories.ToList();
 
@@ -44,14 +51,16 @@ namespace backend.EF.Services
 
                 return new BookStore
                 {
-                    nID = item.nBookID, // int ไม่ nullable
+                    nID = item.nBookID,
                     sTitle = item.sName ?? "",
-                    nPrice = item.nAmount ?? 0, // int? ใช้ ??
-                    nStock = item.isPrint ?? false, // bool? ใช้ ??
-                    nPublishDate = item.dRelease.HasValue ? item.dRelease.Value.ToString("dd/MM/yyyy") : "-",
-                    nAuthor = item.nAutherID ?? 0, // int? ใช้ ??
+                    nPrice = item.nAmount ?? 0,
+                    nStock = item.isPrint ?? false,
+                    nPublishDate = item.dRelease.HasValue
+                    ? item.dRelease.Value.ToString("dd/MM/yyyy")
+                    : DateTime.Now.ToString("dd/MM/yyyy"),
+                    nAuthor = item.nAutherID ?? 0,
                     sAuthorName = author?.sName ?? "",
-                    nCategory = item.nCategoryID ?? 0, // int? ใช้ ??
+                    nCategory = item.nCategoryID ?? 0,
                     sCategoryName = category?.sName ?? ""
                 };
             }).ToList();
@@ -65,39 +74,33 @@ namespace backend.EF.Services
         public ResultAPI Create(BookStore book)
         {
             ResultAPI result = new ResultAPI();
-
             try
             {
-                // ===== ตรวจสอบ Author =====
                 var author = _db.TB_Authers.FirstOrDefault(a => a.sName == book.sAuthorName);
                 var Id = _db.TB_Authers.Max(M => M.nAutherID) + 1;
                 if (author == null)
                 {
-                    author = new TB_Auther { sName = book.sAuthorName , nAutherID = Id };
+                    author = new TB_Auther { sName = book.sAuthorName, nAutherID = Id };
                     _db.TB_Authers.Add(author);
                     _db.SaveChanges();
                 }
 
-                // ===== ตรวจสอบ Category =====
                 var category = _db.TB_Categories.FirstOrDefault(c => c.sName == book.sCategoryName);
                 var CateId = _db.TB_Categories.Max(N => N.nCategoryID) + 1;
                 if (category == null)
                 {
-                    category = new TB_Category { sName = book.sCategoryName , nCategoryID = CateId };
+                    category = new TB_Category { sName = book.sCategoryName, nCategoryID = CateId };
                     _db.TB_Categories.Add(category);
                     _db.SaveChanges();
                 }
 
                 var bookId = _db.TB_Books.Max(N => N.nBookID) + 1;
-                //===== เพิ่ม Book =====
-                DateTime releaseDate;
                 var newBook = new TB_Book
                 {
                     nBookID = bookId,
                     sName = book.sTitle,
                     nAmount = book.nPrice,
                     isPrint = book.nStock,
-                    //dRelease = DateTime.TryParse(book.nPublishDate, out releaseDate) ? releaseDate : null,
                     nAutherID = author.nAutherID,
                     nCategoryID = category.nCategoryID,
                     dCreate = DateTime.Now,
@@ -110,7 +113,7 @@ namespace backend.EF.Services
 
                 result.nStatusCode = StatusCodes.Status200OK;
                 result.sMessage = "บันทึกสำเร็จ";
-                result.objResult = book; // ส่งกลับข้อมูลที่ submit
+                result.objResult = book;
             }
             catch (Exception ex)
             {
@@ -119,11 +122,13 @@ namespace backend.EF.Services
             }
             return result;
         }
+
+        // ===== Soft Delete =====
         public ResultAPI Delete(int id)
         {
             ResultAPI result = new ResultAPI();
-
             var book = _db.TB_Books.FirstOrDefault(b => b.nBookID == id);
+
             if (book == null)
             {
                 result.nStatusCode = StatusCodes.Status404NotFound;
@@ -131,14 +136,49 @@ namespace backend.EF.Services
                 return result;
             }
 
-            // Soft Delete
+            // Soft Delete + Log
             book.isDelete = true;
-            book.dUpdate = DateTime.Now;
-
+            book.dDelete = DateTime.Now;
             _db.SaveChanges();
 
             result.nStatusCode = StatusCodes.Status200OK;
-            result.sMessage = "ลบข้อมูลสำเร็จ";
+            result.sMessage = "ลบข้อมูลสำเร็จ (Soft Delete)";
+            return result;
+        }
+        public ResultAPI Edit(BookStore book)
+        {
+            var result = new ResultAPI();
+            try
+            {
+                var existingBook = _db.TB_Books.FirstOrDefault(b => b.nBookID == book.nBookID);
+                if (existingBook == null)
+                {
+                    result.nStatusCode = 404;
+                    result.sMessage = "ไม่พบข้อมูล";
+                    return result;
+                }
+
+                // อัปเดตค่า
+                existingBook.sName = book.sTitle;
+                existingBook.nAmount = book.nPrice;
+                existingBook.isPrint = book.nStock;
+                existingBook.dRelease = book.nPublishDate;
+                existingBook.dUpdate = DateTime.Now;
+
+                // TODO: ถ้า Author/Category เป็น string ต้อง map หา ID ก่อน
+                // existingBook.nAutherID = ...;
+                // existingBook.nCategoryID = ...;
+
+                _db.SaveChanges();
+
+                result.nStatusCode = 200;
+                result.sMessage = "แก้ไขข้อมูลสำเร็จ";
+            }
+            catch (Exception ex)
+            {
+                result.nStatusCode = 500;
+                result.sMessage = "เกิดข้อผิดพลาด: " + ex.Message;
+            }
             return result;
         }
 

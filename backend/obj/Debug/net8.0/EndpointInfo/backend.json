@@ -69,6 +69,37 @@
           }
         }
       }
+    },
+    "/Book/Edit": {
+      "put": {
+        "tags": [
+          "Book"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BookStore"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BookStore"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/BookStore"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -76,6 +107,10 @@
       "BookStore": {
         "type": "object",
         "properties": {
+          "nBookID": {
+            "type": "integer",
+            "format": "int32"
+          },
           "nID": {
             "type": "integer",
             "format": "int32",

@@ -14,30 +14,32 @@ namespace backend.Controllers
         {
             _bookService = bookService;
         }
+
         [HttpGet]
         public IActionResult OnloadData()
         {
             var result = _bookService.OnloadData();
             return StatusCode(result.nStatusCode, result);
         }
+
         [HttpPost]
         public IActionResult Create([FromBody] BookStore book)
         {
-            if (book == null)
-                return BadRequest(new { message = "ข้อมูลว่าง" });
-
             var result = _bookService.Create(book);
             return StatusCode(result.nStatusCode, result);
         }
-        [HttpDelete]
-        public IActionResult Delete(int id)
-        {
-            if (id <= 0)
-                return BadRequest(new { message = "รหัสหนังสือไม่ถูกต้อง" });
 
+        [HttpDelete]
+        public IActionResult Delete([FromQuery] int id)
+        {
             var result = _bookService.Delete(id);
             return StatusCode(result.nStatusCode, result);
         }
-
+        [HttpPut]
+        public IActionResult Edit([FromBody] BookStore book)
+        {
+            var result = _bookService.Edit(book);
+            return StatusCode(result.nStatusCode, result);
+        }
     }
 }
