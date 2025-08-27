@@ -49,6 +49,26 @@
   },
   {
     "ContainingType": "backend.Controllers.BookController",
+    "Method": "GetAuthors",
+    "RelativePath": "Book/GetAuthors",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "backend.Controllers.BookController",
+    "Method": "GetCategories",
+    "RelativePath": "Book/GetCategories",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "backend.Controllers.BookController",
     "Method": "OnloadData",
     "RelativePath": "Book/OnloadData",
     "HttpMethod": "GET",

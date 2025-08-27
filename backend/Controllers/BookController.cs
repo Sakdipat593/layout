@@ -41,5 +41,18 @@ namespace backend.Controllers
             var result = _bookService.Edit(book);
             return StatusCode(result.nStatusCode, result);
         }
+        [HttpGet]
+        public IActionResult GetAuthors()
+        {
+            var authors = _bookService.GetAllAuthors();
+            return Ok(authors);
+        }
+
+        [HttpGet]
+        public IActionResult GetCategories()
+        {
+            var categories = _bookService.GetAllCategories();
+            return Ok(categories);
+        }
     }
 }

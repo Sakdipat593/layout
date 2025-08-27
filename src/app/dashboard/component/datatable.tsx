@@ -34,7 +34,19 @@ type Errors = {
 };
 
 export default function DataTable() {
-  const [data, setData] = useState<DataRow[]>([]); // เริ่มด้วย []
+  const [data, setData] = useState<DataRow[]>([]);
+  const [authors, setAuthors] = useState<{ nAutherID: number, sName: string }[]>([]);
+  const [categories, setCategories] = useState<{ nCategoryID: number, sName: string }[]>([]);
+
+  // helper แปลง Date เป็น dd/mm/yyyy พ.ศ.
+  const formatDateBE = (date: Date | string) => {
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return '';
+    const day = d.getDate().toString().padStart(2, '0');
+    const month = (d.getMonth() + 1).toString().padStart(2, '0');
+    const yearBE = d.getFullYear() + 543;
+    return `${day}/${month}/${yearBE}`;
+  };
 
   // ดึงข้อมูลจาก backend
   useEffect(() => {
@@ -42,15 +54,25 @@ export default function DataTable() {
       try {
         const response = await axios.get("https://localhost:7234/Book/OnloadData");
         if (response.data && Array.isArray(response.data.objResult)) {
-          const mappedData: DataRow[] = response.data.objResult.map((item: any, index: number) => ({
-            nNo: index + 1,
-            sName: item.sTitle,
-            nAmount: item.nPrice,
-            isPrint: item.nStock,
-            dRelease: (item.nPublishDate), // ใช้ฟังก์ชัน parse
-            sAuthor: item.sAuthorName,
-            sCategory: item.sCategoryName
-          }));
+          const mappedData: DataRow[] = response.data.objResult.map((item: any, index: number) => {
+            let releaseDate: Date;
+            if (item.nPublishDate) {
+              const temp = new Date(item.nPublishDate);
+              releaseDate = isNaN(temp.getTime()) ? new Date() : temp;
+            } else {
+              releaseDate = new Date();
+            }
+
+            return {
+              nNo: index + 1,
+              sName: item.sTitle,
+              nAmount: item.nPrice,
+              isPrint: item.nStock,
+              dRelease: releaseDate,
+              sAuthor: item.sAuthorName,
+              sCategory: item.sCategoryName
+            };
+          });
           setData(mappedData);
         }
       } catch (error) {
@@ -58,7 +80,20 @@ export default function DataTable() {
       }
     };
 
+    const fetchDropdown = async () => {
+      try {
+        const resAuthors = await axios.get("https://localhost:7234/Book/GetAuthors");
+        setAuthors(resAuthors.data);
+
+        const resCategories = await axios.get("https://localhost:7234/Book/GetCategories");
+        setCategories(resCategories.data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
     fetchData();
+    fetchDropdown();
   }, []);
 
   // ===== Modal แก้ไขข้อมูล =====
@@ -76,9 +111,8 @@ export default function DataTable() {
   const handleModalSave = async () => {
     if (editRow) {
       try {
-        // ส่งข้อมูลไป Backend (API PUT)
         const payload = {
-          nBookID: editRow.nNo,   // ❗ ตอนนี้คุณใช้ nNo ซึ่งเป็นแค่ลำดับ ต้องแก้ Backend ให้รับ id จริง
+          nBookID: editRow.nNo,   // ต้องแก้ Backend ให้รับ id จริง
           sTitle: editRow.sName,
           nPrice: editRow.nAmount,
           nStock: editRow.isPrint,
@@ -93,8 +127,6 @@ export default function DataTable() {
 
         if (response.data.nStatusCode === 200) {
           alert("แก้ไขข้อมูลสำเร็จ ");
-
-          // อัปเดต frontend table ด้วยข้อมูลใหม่
           setData(prev => prev.map(item => item.nNo === editRow.nNo ? editRow : item));
           setIsModalOpen(false);
         } else {
@@ -106,7 +138,6 @@ export default function DataTable() {
       }
     }
   };
-
 
   const handleModalClose = () => setIsModalOpen(false);
 
@@ -120,15 +151,10 @@ export default function DataTable() {
   };
 
   const confirmDelete = async () => {
-    // log ดูค่า deleteRowId ก่อนเรียก API
-    console.log("deleteRowId:", deleteRowId);
-
     if (deleteRowId !== null) {
       try {
-        // เรียก API ลบหนังสือ (soft delete)
         const response = await axios.delete(`https://localhost:7234/Book/Delete?id=${deleteRowId}`);
         if (response.data.nStatusCode === 200) {
-          // ลบแถวจาก frontend table
           setData(prev => prev.filter(row => row.nNo !== deleteRowId));
           alert("ลบสำเร็จ!");
         } else {
@@ -139,12 +165,9 @@ export default function DataTable() {
         alert("เกิดข้อผิดพลาดในการเชื่อมต่อกับ server");
       }
     }
-
-    // ปิด modal ทุกกรณี
     setIsDeleteConfirmOpen(false);
     setDeleteRowId(null);
   };
-
 
   const cancelDelete = () => {
     setIsDeleteConfirmOpen(false);
@@ -163,11 +186,7 @@ export default function DataTable() {
 
   const [errors, setErrors] = useState<Errors>({});
 
-  // helper
-  const hasNumber = (str: string) => /\d/.test(str);
-
-  // อัปเดตค่า input + จัดการ logic พิเศษของแต่ละช่อง
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     let nextValue: string | boolean = value;
 
@@ -184,74 +203,74 @@ export default function DataTable() {
     setErrors(prev => ({ ...prev, [name]: '' }));
   };
 
-  // ตรวจทุกช่องและเซ็ตข้อความ error ใต้ช่อง
   const validateForm = () => {
     const newErrors: Errors = {};
 
+    // --- ตรวจ Title ---
     if (!newRow.sName.trim()) {
       newErrors.sName = 'กรุณากรอก Title';
-    } else if (data.some(item => item.sName.toLowerCase() === newRow.sName.trim().toLowerCase())) {
-      newErrors.sName = 'Title ซ้ำกับรายการที่มีอยู่';
+    } else if (data.some(item =>
+      item.sName.toLowerCase() === newRow.sName.trim().toLowerCase() &&
+      item.sAuthor.toLowerCase() === newRow.sAuthor.trim().toLowerCase() &&
+      item.sCategory.toLowerCase() === newRow.sCategory.trim().toLowerCase()
+    )) {
+      newErrors.sName = 'รายการนี้ซ้ำกับที่มีอยู่แล้ว';
     }
 
+    // --- ตรวจ Price ---
     if (!newRow.nAmount.trim()) {
       newErrors.nAmount = 'กรุณากรอก Price';
     } else if (Number(newRow.nAmount) <= 0) {
       newErrors.nAmount = 'กรุณากรอก Price มากกว่า 0';
     }
 
+    // --- ตรวจ Publish Date ---
     if (!newRow.dRelease) {
       newErrors.dRelease = 'กรุณาเลือก Publish Date';
     }
 
+    // --- ตรวจ Author ---
     if (!newRow.sAuthor.trim()) {
-      newErrors.sAuthor = 'กรุณากรอก Author';
-    } else if (hasNumber(newRow.sAuthor)) {
-      newErrors.sAuthor = 'Author ต้องไม่มีตัวเลข';
+      newErrors.sAuthor = 'กรุณาเลือก Author';
     }
 
+    // --- ตรวจ Category ---
     if (!newRow.sCategory.trim()) {
-      newErrors.sCategory = 'กรุณากรอก Category';
-    } else if (hasNumber(newRow.sCategory)) {
-      newErrors.sCategory = 'Category ต้องไม่มีตัวเลข';
+      newErrors.sCategory = 'กรุณาเลือก Category';
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();            // ป้องกัน reload หน้า
-    if (!validateForm()) return;   // ตรวจ validation
 
-    // เตรียมข้อมูลสำหรับส่งไป backend
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+
     const payload = {
       sTitle: newRow.sName.trim(),
       nPrice: Number(newRow.nAmount),
       nStock: newRow.isPrint,
       nPublishDate: new Date(newRow.dRelease).toISOString().substring(0, 10),
-      sAuthorName: newRow.sAuthor.trim(),
-      sCategoryName: newRow.sCategory.trim()
+      sAuthorName: newRow.sAuthor,
+      sCategoryName: newRow.sCategory
     };
-    console.log(payload)
+
     try {
       const response = await axios.post("https://localhost:7234/Book/Create", payload);
-
       if (response.data.nStatusCode === 200) {
-        // เพิ่มข้อมูลใน table ของ frontend
         const nextId = data.length > 0 ? Math.max(...data.map(d => d.nNo)) + 1 : 1;
         const newItem: DataRow = {
           nNo: nextId,
-          sName: newRow.sName.trim(),
+          sName: newRow.sName,
           nAmount: Number(newRow.nAmount),
           isPrint: newRow.isPrint,
           dRelease: new Date(newRow.dRelease),
-          sAuthor: newRow.sAuthor.trim(),
-          sCategory: newRow.sCategory.trim()
+          sAuthor: newRow.sAuthor,
+          sCategory: newRow.sCategory
         };
         setData(prev => [...prev, newItem]);
-
-        // เคลียร์ฟอร์ม
         setNewRow({ sName: '', nAmount: '', isPrint: true, dRelease: '', sAuthor: '', sCategory: '' });
         setErrors({});
         alert("บันทึกสำเร็จ!");
@@ -264,12 +283,10 @@ export default function DataTable() {
     }
   };
 
-
   return (
     <div>
       <div className='input-data'>
         <h1 className='table'>รายการข้อมูล</h1>
-
         <table className='data-table'>
           <thead>
             <tr>
@@ -292,7 +309,7 @@ export default function DataTable() {
                 <td className={`col-center ${row.isPrint ? 'status-printed' : 'status-unprinted'}`}>
                   {row.isPrint ? 'In Stock' : 'Out Stock'}
                 </td>
-                <td className='col-center'>{(row.dRelease) + ''}</td>
+                <td className='col-center'>{formatDateBE(row.dRelease)}</td>
                 <td>{row.sAuthor}</td>
                 <td>{row.sCategory}</td>
                 <td className='col-center'>
@@ -314,57 +331,32 @@ export default function DataTable() {
               <div className='edit-form-text'>
                 <div className='edit-form-row'>
                   <label className='label-edit'>Name:</label>
-                  <input
-                    type="text"
-                    value={editRow.sName}
-                    onChange={(e) => setEditRow({ ...editRow, sName: e.target.value })}
-                  />
+                  <input type="text" value={editRow.sName} onChange={(e) => setEditRow({ ...editRow, sName: e.target.value })} />
                   <label className='label-edit'>Amount:</label>
-                  <input
-                    type="number"
-                    value={editRow.nAmount}
-                    onChange={(e) => setEditRow({ ...editRow, nAmount: Number(e.target.value) })}
-                    min={0}
-                  />
+                  <input type="number" value={editRow.nAmount} onChange={(e) => setEditRow({ ...editRow, nAmount: Number(e.target.value) })} min={0} />
                 </div>
                 <div className='edit-form-row'>
                   <label className='label-edit'>Author:</label>
-                  <input
-                    type="text"
-                    value={editRow.sAuthor}
-                    onChange={(e) => setEditRow({ ...editRow, sAuthor: e.target.value })}
-                  />
+                  <select value={editRow.sAuthor} onChange={(e) => setEditRow({ ...editRow, sAuthor: e.target.value })}>
+                    <option value=''>-- เลือก Author --</option>
+                    {authors.map(a => <option key={a.nAutherID} value={a.sName}>{a.sName}</option>)}
+                  </select>
                   <label className='label-edit'>Category:</label>
-                  <input
-                    type="text"
-                    value={editRow.sCategory}
-                    onChange={(e) => setEditRow({ ...editRow, sCategory: e.target.value })}
-                  />
+                  <select value={editRow.sCategory} onChange={(e) => setEditRow({ ...editRow, sCategory: e.target.value })}>
+                    <option value=''>-- เลือก Category --</option>
+                    {categories.map(c => <option key={c.nCategoryID} value={c.sName}>{c.sName}</option>)}
+                  </select>
                 </div>
                 <div className='edit-form-radio'>
                   <label className='label-edit'>Stock:</label>
                   <div className='edit-radio-group'>
-                    <input
-                      type="radio"
-                      name="status"
-                      checked={editRow.isPrint === true}
-                      onChange={() => setEditRow({ ...editRow, isPrint: true })}
-                    /> In Stock
-                    <input
-                      type="radio"
-                      name="status"
-                      checked={editRow.isPrint === false}
-                      onChange={() => setEditRow({ ...editRow, isPrint: false })}
-                    /> Out Stock
+                    <input type="radio" name="status" checked={editRow.isPrint === true} onChange={() => setEditRow({ ...editRow, isPrint: true })} /> In Stock
+                    <input type="radio" name="status" checked={editRow.isPrint === false} onChange={() => setEditRow({ ...editRow, isPrint: false })} /> Out Stock
                   </div>
                 </div>
                 <div className='edit-form-date'>
                   <label className='label-edit'>Release Date:</label>
-                  <input
-                    type="date"
-                    value={editRow.dRelease.toISOString().substring(0, 10)}
-                    onChange={(e) => setEditRow({ ...editRow, dRelease: new Date(e.target.value) })}
-                  />
+                  <input type="date" value={editRow.dRelease ? new Date(editRow.dRelease).toISOString().split("T")[0] : ""} onChange={(e) => setEditRow({ ...editRow, dRelease: new Date(e.target.value) })} />
                 </div>
                 <div className='edit-button-group'>
                   <button onClick={handleModalSave} className='edit-save'>Save</button>
@@ -394,7 +386,6 @@ export default function DataTable() {
         {/* ฟอร์มเพิ่มข้อมูลใหม่ */}
         <h1 className='form'>เพิ่มรายการ</h1>
         <form className='data-form' onSubmit={handleSubmit} noValidate>
-          {/* --- Form Rows --- */}
           <div className='form-row'>
             <div className='form-group'>
               <label>Title:</label>
@@ -432,13 +423,19 @@ export default function DataTable() {
           <div className='form-row'>
             <div className='form-group'>
               <label>Author:</label>
-              <input type='text' name='sAuthor' value={newRow.sAuthor} onChange={handleInputChange} />
+              <select name='sAuthor' value={newRow.sAuthor} onChange={handleInputChange}>
+                <option value=''>-- เลือก Author --</option>
+                {authors.map(a => <option key={a.nAutherID} value={a.sName}>{a.sName}</option>)}
+              </select>
               {errors.sAuthor && <div style={{ color: 'red', fontSize: '12px', marginTop: 4 }}>{errors.sAuthor}</div>}
             </div>
 
             <div className='form-group'>
               <label>Category:</label>
-              <input type='text' name='sCategory' value={newRow.sCategory} onChange={handleInputChange} />
+              <select name='sCategory' value={newRow.sCategory} onChange={handleInputChange}>
+                <option value=''>-- เลือก Category --</option>
+                {categories.map(c => <option key={c.nCategoryID} value={c.sName}>{c.sName}</option>)}
+              </select>
               {errors.sCategory && <div style={{ color: 'red', fontSize: '12px', marginTop: 4 }}>{errors.sCategory}</div>}
             </div>
           </div>

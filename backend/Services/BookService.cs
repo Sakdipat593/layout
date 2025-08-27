@@ -1,8 +1,9 @@
 ﻿using backend.EF.Models;
 using backend.EF.Models.BookModel;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.ApplicationModels;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
-
 
 namespace backend.EF.Services
 {
@@ -12,6 +13,8 @@ namespace backend.EF.Services
         ResultAPI Create(BookStore book);
         ResultAPI Delete(int id);
         ResultAPI Edit(BookStore book);
+        List<TB_Auther> GetAllAuthors();
+        List<TB_Category> GetAllCategories();
 
     }
 
@@ -103,6 +106,7 @@ namespace backend.EF.Services
                     isPrint = book.nStock,
                     nAutherID = author.nAutherID,
                     nCategoryID = category.nCategoryID,
+                    dRelease = DateTime.Now,
                     dCreate = DateTime.Now,
                     dUpdate = DateTime.Now,
                     isDelete = false
@@ -162,7 +166,7 @@ namespace backend.EF.Services
                 existingBook.sName = book.sTitle;
                 existingBook.nAmount = book.nPrice;
                 existingBook.isPrint = book.nStock;
-                existingBook.dRelease = book.nPublishDate;
+                existingBook.dRelease = DateTime.Now;
                 existingBook.dUpdate = DateTime.Now;
 
                 // TODO: ถ้า Author/Category เป็น string ต้อง map หา ID ก่อน
@@ -181,6 +185,14 @@ namespace backend.EF.Services
             }
             return result;
         }
+        public List<TB_Auther> GetAllAuthors()
+        {
+            return _db.TB_Authers.ToList();
+        }
 
+        public List<TB_Category> GetAllCategories()
+        {
+            return _db.TB_Categories.ToList();
+        }
     }
 }

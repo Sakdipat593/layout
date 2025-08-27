@@ -7,3 +7,12 @@
         public object? objResult { get; set; }
     }
 }
+namespace backend.EF.Models.BookModel
+{
+    public class CommonModel
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+    }
+}
+
