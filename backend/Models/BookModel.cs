@@ -1,6 +1,4 @@
-﻿using Microsoft.Identity.Client;
-
-namespace backend.EF.Models.BookModel
+﻿namespace backend.EF.Models.BookModel
 {
     public class BookStore
     {

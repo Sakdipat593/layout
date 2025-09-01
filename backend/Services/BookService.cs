@@ -32,10 +32,9 @@ namespace backend.EF.Services
         {
             ResultAPI result = new ResultAPI();
 
-            // ดึงเฉพาะ record ที่ยังไม่ถูกลบ
-            var lstData = _db.TB_Books
-                             .Where(b => b.isDelete == false)
-                             .ToList();
+            var lstData = _db.TB_Books.ToList() // ดึงข้อมูลที่ยังอยู่จริง
+                          .Where(b => b.isDelete == false || b.isDelete == null)
+                          .ToList();
 
             var lstAuthor = _db.TB_Authers.ToList();
             var lstCategory = _db.TB_Categories.ToList();
@@ -168,10 +167,6 @@ namespace backend.EF.Services
                 existingBook.isPrint = book.nStock;
                 existingBook.dRelease = DateTime.Now;
                 existingBook.dUpdate = DateTime.Now;
-
-                // TODO: ถ้า Author/Category เป็น string ต้อง map หา ID ก่อน
-                // existingBook.nAutherID = ...;
-                // existingBook.nCategoryID = ...;
 
                 _db.SaveChanges();
 

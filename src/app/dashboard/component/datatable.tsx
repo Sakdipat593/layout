@@ -44,7 +44,7 @@ export default function DataTable() {
     if (isNaN(d.getTime())) return '';
     const day = d.getDate().toString().padStart(2, '0');
     const month = (d.getMonth() + 1).toString().padStart(2, '0');
-    const yearBE = d.getFullYear() + 543;
+    const yearBE = d.getFullYear() ;
     return `${day}/${month}/${yearBE}`;
   };
 
